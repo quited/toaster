@@ -60,6 +60,8 @@ func (l *Service) StartService() (err error) {
 	if err != nil {
 		return fmt.Errorf("could not start service: %v", err)
 	}
+
+	<-time.After(10 * time.Second)
 	if err = l.ServiceApi.SendNoResponse(l.ManagerApi); err != nil {
 		return err
 	}

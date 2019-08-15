@@ -1,10 +1,10 @@
-package main
+package launcher
 
 import (
 	"flag"
 	"fmt"
+	"github.com/quited/toaster/launcher/service"
 	"golang.org/x/sys/windows/svc"
-	"launcher/service"
 	"log"
 	"os"
 )
@@ -39,11 +39,6 @@ func main() {
 		config.Manager.ApiEndpoint = *startService
 		srv, err := config.LoadService()
 		FatalWhileErr(err)
-		stat, err := srv.Status()
-		FatalWhileErr(err)
-		if stat.State != svc.Stopped {
-			FatalWhileErr(srv.ControlService(svc.Stop, svc.Stopped))
-		}
 		FatalWhileErr(srv.StartService())
 		fmt.Println(config.Service.ApiEndpoint)
 		return
@@ -67,6 +62,14 @@ func main() {
 		default:
 			fmt.Println("stopped")
 		}
+		return
+	}
+
+	if *rawRun {
+		srv, err := config.LoadService()
+		FatalWhileErr(err)
+		FatalWhileErr(srv.StartService())
+		fmt.Println(config.Service.ApiEndpoint)
 		return
 	}
 

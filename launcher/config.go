@@ -1,9 +1,9 @@
-package main
+package launcher
 
 import (
 	"encoding/json"
+	"github.com/quited/toaster/launcher/service"
 	"io/ioutil"
-	"launcher/service"
 )
 
 type Config struct {

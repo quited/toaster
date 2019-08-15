@@ -1,4 +1,4 @@
-package main
+package launcher
 
 import "flag"
 
@@ -10,4 +10,5 @@ var (
 	startService      = flag.String("b", "", "Start service,set manager's api address and output service's api address")
 	installService    = flag.Bool("i", false, "Install service")
 	removeService     = flag.Bool("r", false, "Remove service")
+	rawRun            = flag.Bool("p", false, "Raw run service")
 )
