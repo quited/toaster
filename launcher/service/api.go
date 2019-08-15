@@ -13,7 +13,7 @@ import (
 
 type ApiEndpoint struct {
 	Protocol string `json:"protocol"`
-	Path     string `json:"address"`
+	Path     string `json:"path"`
 
 	client *http.Client
 }
