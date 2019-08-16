@@ -9,9 +9,14 @@ import (
 	"os"
 )
 
+const noLog = true
+
 func FatalWhileErr(err error) {
 	if err != nil {
-		log.Fatalln(err)
+		if !noLog {
+			log.Fatalln(err)
+		}
+		os.Exit(-1)
 	}
 }
 
