@@ -6,28 +6,25 @@ import (
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/debug"
 	"golang.org/x/sys/windows/svc/eventlog"
-	"log"
 	"net/http"
 	"os"
 )
 
 var elog debug.Log
 
-type WindowsService struct{}
+type ServiceJob func(config *service.Config)
+
+type WindowsService struct {
+	conf *service.Config
+	job  ServiceJob
+}
 
 func (m *WindowsService) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (ssec bool, errno uint32) {
 	const cmdsAccepted = svc.AcceptStop | svc.AcceptShutdown | svc.AcceptPauseAndContinue
 	changes <- svc.Status{State: svc.StartPending}
 	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
 
-	job := func() {
-		http.Handle("/", &Service{})
-		if err := http.ListenAndServe("localhost:1000", http.DefaultServeMux); err != nil {
-			log.Fatalln("[ERROR] [Serve] ", err)
-		}
-	}
-
-	go job()
+	go m.job(m.conf)
 loop:
 	for {
 		select {
@@ -51,42 +48,27 @@ loop:
 	return
 }
 
-type Service struct {
-	manager *service.ApiEndpoint
+func (w *WindowsService) SetJob(job ServiceJob) {
+	w.job = job
 }
 
-func (s *Service) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	switch req.URL.Path {
-	case "/manage":
-		var err error
-
-		if req.Method != http.MethodPost {
-			log.Println("[ERROR] [/manage] invalid request method ", req.Method)
-			res.WriteHeader(http.StatusNotAcceptable)
-			return
-		}
-
-		if err := req.ParseForm(); err != nil {
-			log.Println("[ERROR] [/manage] parsing form: ", err)
-			res.WriteHeader(http.StatusNotAcceptable)
-			return
-		}
-
-		s.manager, err = service.NewApiEndpointFromJsonStream(req.Body)
-		defer req.Body.Close()
-		if err != nil {
-			log.Println("[ERROR] [/manage]", err)
-			res.WriteHeader(http.StatusNotAcceptable)
-			return
-		}
-	default:
-		log.Println("[ERROR] [" + req.URL.Path + "] invalid path")
-		res.WriteHeader(http.StatusNotFound)
-		return
+func NewWindowsService(configFile string) (obj *WindowsService, err error) {
+	obj = new(WindowsService)
+	obj.conf, err = service.LoadConfig(configFile)
+	if err != nil {
+		return nil, err
 	}
+	obj.job = func(config *service.Config) {
+		if err := http.ListenAndServe(config.Service.ApiEndpoint, http.DefaultServeMux); err != nil {
+			elog.Error(1, fmt.Sprintf("%s service failed: %v", config.Service.Name, err))
+			os.Exit(-1)
+		}
+	}
+	return
 }
 
-func runService(name string, isDebug bool) {
+func (w *WindowsService) Run(isDebug bool) {
+	name := w.conf.Service.Name
 	var err error
 	if isDebug {
 		elog = debug.New(name)
@@ -109,17 +91,4 @@ func runService(name string, isDebug bool) {
 		return
 	}
 	elog.Info(1, fmt.Sprintf("%s service stopped", name))
-}
-
-func main() {
-	interactive, err := svc.IsAnInteractiveSession()
-	if err != nil {
-		elog.Error(1, fmt.Sprintf("%s service failed %v", "demo_service", err))
-		os.Exit(-1)
-	}
-	if interactive {
-		runService("demo_service", true)
-	} else {
-		runService("demo_service", false)
-	}
 }

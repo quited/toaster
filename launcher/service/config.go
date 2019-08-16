@@ -1,8 +1,7 @@
-package main
+package service
 
 import (
 	"encoding/json"
-	"github.com/quited/toaster/launcher/service"
 	"io/ioutil"
 )
 
@@ -19,9 +18,9 @@ type Config struct {
 	} `json:"manager"`
 }
 
-func loadConfig() (*Config, error) {
+func LoadConfig(configFile string) (*Config, error) {
 	s := Config{}
-	data, err := ioutil.ReadFile(*configFile)
+	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return nil, err
 	}
@@ -29,14 +28,14 @@ func loadConfig() (*Config, error) {
 	return &s, err
 }
 
-func (c *Config) LoadService() (*service.Service, error) {
-	return service.NewService(c.Service.Name, c.Manager.ApiEndpoint, c.Service.ApiEndpoint)
+func (c *Config) LoadService() (*Service, error) {
+	return NewService(c.Service.Name, c.Manager.ApiEndpoint, c.Service.ApiEndpoint)
 }
 
 func (c *Config) InstallService() error {
-	return service.InstallService(c.Service.Name, c.Service.Description, c.Service.ProgramFile)
+	return InstallService(c.Service.Name, c.Service.Description, c.Service.ProgramFile)
 }
 
 func (c *Config) RemoveService() error {
-	return service.RemoveService(c.Service.Name)
+	return RemoveService(c.Service.Name)
 }

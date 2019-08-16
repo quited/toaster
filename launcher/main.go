@@ -22,7 +22,7 @@ func FatalWhileErr(err error) {
 
 func main() {
 	flag.Parse()
-	config, err := loadConfig()
+	config, err := service.LoadConfig(*configFile)
 	FatalWhileErr(err)
 
 	if *installService {
