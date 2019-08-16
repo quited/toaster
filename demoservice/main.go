@@ -7,8 +7,8 @@ import (
 	"golang.org/x/sys/windows/svc/debug"
 	"golang.org/x/sys/windows/svc/eventlog"
 	"log"
-	"net"
 	"net/http"
+	"os"
 )
 
 var elog debug.Log
@@ -21,18 +21,9 @@ func (m *WindowsService) Execute(args []string, r <-chan svc.ChangeRequest, chan
 	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
 
 	job := func() {
-		srv := &Service{}
-		mux := http.NewServeMux()
-		mux.Handle("/", srv)
-
-		listener, err := net.Listen("tcp", "localhost:1000")
-
-		if err != nil {
-			log.Fatalln("[ERROR] [job] ", err)
-		}
-
-		if err := http.Serve(listener, mux); err != nil {
-			log.Fatalln("[ERROR] [job] ", err)
+		http.Handle("/", &Service{})
+		if err := http.ListenAndServe("localhost:1000", http.DefaultServeMux); err != nil {
+			log.Fatalln("[ERROR] [Serve] ", err)
 		}
 	}
 
@@ -67,25 +58,27 @@ type Service struct {
 func (s *Service) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	switch req.URL.Path {
 	case "/manage":
+		var err error
+
 		if req.Method != http.MethodPost {
 			log.Println("[ERROR] [/manage] invalid request method ", req.Method)
-			return
-		}
-		rc, err := req.GetBody()
-		if err != nil {
-			log.Println("[ERROR] [/manage]", err)
 			res.WriteHeader(http.StatusNotAcceptable)
 			return
 		}
-		defer rc.Close()
 
-		s.manager, err = service.NewApiEndpointFromJsonStream(rc)
+		if err := req.ParseForm(); err != nil {
+			log.Println("[ERROR] [/manage] parsing form: ", err)
+			res.WriteHeader(http.StatusNotAcceptable)
+			return
+		}
+
+		s.manager, err = service.NewApiEndpointFromJsonStream(req.Body)
+		defer req.Body.Close()
 		if err != nil {
 			log.Println("[ERROR] [/manage]", err)
 			res.WriteHeader(http.StatusNotAcceptable)
 			return
 		}
-		fmt.Println(*s.manager)
 	default:
 		log.Println("[ERROR] [" + req.URL.Path + "] invalid path")
 		res.WriteHeader(http.StatusNotFound)
@@ -119,5 +112,14 @@ func runService(name string, isDebug bool) {
 }
 
 func main() {
-	runService("demo_service", false)
+	interactive, err := svc.IsAnInteractiveSession()
+	if err != nil {
+		elog.Error(1, fmt.Sprintf("%s service failed %v", "demo_service", err))
+		os.Exit(-1)
+	}
+	if interactive {
+		runService("demo_service", true)
+	} else {
+		runService("demo_service", false)
+	}
 }
