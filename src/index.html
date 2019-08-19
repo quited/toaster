@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,
+              initial-scale=1.0,
+              maximun-scale=1.0,
+              user-scalable=no">
+  <title>Hello World!</title>
+  <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.css" />
+  <link rel="stylesheet" href="index.css">
+  <title></title>
+</head>
+
+<body style="-webkit-app-region: drag">
+  <div id="body"></div>
+</body>
+
+<script>
+  window.$ = window.jQuery = require("../node_modules/jquery/dist/jquery.js");
+  require("../node_modules/bootstrap/dist/js/bootstrap.js");
+
+  import Vue from 'vue';
+  import indexT from './indexT';
+
+  const app = new Vue(indexT).$mount('#body');
+</script>
+
+</html>

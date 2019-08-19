@@ -1,0 +1,16 @@
+@font-face {
+    font-family: StandardBlack;
+    src:url("contents/media/MicrosoftYaqiHeiLight-2.ttf")
+}
+
+body {
+    background-image: url("contents/media/bg.jpg");
+    background-position: center 0;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    -webkit-background-size: cover;
+    -o-background-size: cover;
+    -moz-background-size: cover;
+    -ms-background-size: cover;
+}
