@@ -19,17 +19,11 @@
       "make_targets": {
         "win32": [
           "squirrel"
-        ],
-        "darwin": [
-          "zip"
-        ],
-        "linux": [
-          "deb",
-          "rpm"
         ]
       },
       "electronPackagerConfig": {
-        "packageManager": "npm"
+        "packageManager": "npm",
+        "icon": "favicon.ico"
       },
       "electronWinstallerConfig": {
         "name": "toaster"
