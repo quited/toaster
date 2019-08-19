@@ -47,13 +47,14 @@
     }
   },
   "dependencies": {
+    "bootstrap": "^4.3.1",
     "electron-compile": "^6.4.4",
     "electron-devtools-installer": "^2.2.4",
     "electron-squirrel-startup": "^1.0.0",
-    "vue": "^2.6.10",
     "jquery": "^3.4.1",
     "popper.js": "^1.15.0",
-    "bootstrap": "^4.3.1"
+    "vue": "^2.6.10",
+    "vue-router": "^3.1.2"
   },
   "devDependencies": {
     "babel-plugin-transform-async-to-generator": "^6.24.1",
